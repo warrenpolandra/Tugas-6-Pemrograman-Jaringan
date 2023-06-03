@@ -138,7 +138,7 @@ class Chat:
         else:
             self.servers[server_id].start()
             self.running_servers.append(server_id)
-            return {'status: OK'}
+            return {'status': 'OK'}
 
 
 if __name__ == "__main__":
