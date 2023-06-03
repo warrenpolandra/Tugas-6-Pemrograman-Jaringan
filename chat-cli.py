@@ -29,6 +29,9 @@ class ChatClient:
                 return self.send_message(usernameto, message)
             elif command == 'inbox':
                 return self.inbox()
+            elif command == 'connect':
+                server_id = j[1].strip()
+                return self.connect(server_id)
             else:
                 return "*Maaf, command tidak benar"
         except IndexError:
@@ -59,6 +62,16 @@ class ChatClient:
             return "username {} logged in, token {} ".format(username, self.tokenid)
         else:
             return "Error, {}".format(result['message'])
+
+    def connect(self, server_id):
+        if self.tokenid == "":
+            return "Error, not authorized"
+        message = "connect {}".format(server_id)
+        result = self.send_string(message)
+        if result['status'] == 'OK':
+            return 'Server {} succesfully connected'.format(server_id)
+        else:
+            return "Error: {}".format(result['message'])
 
     def send_message(self, usernameto="xxx", message="xxx"):
         if self.tokenid == "":

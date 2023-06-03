@@ -3,21 +3,51 @@ import os
 import json
 import uuid
 import logging
+import threading
+import socket
 from queue import Queue
+
+
+class ServerToServerThread(threading.Thread):
+    def __init__(self, chat, server_address, server_port):
+        self.chat = chat
+        self.server_address = server_address
+        self.server_port = server_port
+        self.queue = Queue()
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        threading.Thread.__init__(self)
+
+    def run(self):
+        self.sock.connect((self.server_address, self.server_port))
+        while True:
+            data = self.sock.recv(1024)
+            if data:
+                command = data.decode()
+                response = self.chat.proses(command)
+                self.sock.sendall(json.dumps(response).encode())
+            while not self.queue.empty():
+                message = self.queue.get()
+                self.sock.sendall(json.dumps(message).encode())
+
+    def put(self, message):
+        self.queue.put(message)
 
 
 class Chat:
     def __init__(self):
         self.sessions = {}
-        self.users = {}
-        self.users['messi'] = {'nama': 'Lionel Messi', 'negara': 'Argentina', 'password': 'surabaya', 'incoming': {},
-                               'outgoing': {}}
-        self.users['henderson'] = {'nama': 'Jordan Henderson', 'negara': 'Inggris', 'password': 'surabaya',
-                                   'incoming': {}, 'outgoing': {}}
-        self.users['lineker'] = {'nama': 'Gary Lineker', 'negara': 'Inggris', 'password': 'surabaya', 'incoming': {},
-                                 'outgoing': {}}
-        self.users['maguire'] = {'nama': 'Harry Maguire', 'negara': 'Inggris', 'password': 'surabaya', 'incoming': {},
-                                 'outgoing': {}}
+        self.users = {'messi': {'nama': 'Lionel Messi', 'negara': 'Argentina', 'password': 'surabaya', 'incoming': {},
+                                'outgoing': {}},
+                      'henderson': {'nama': 'Jordan Henderson', 'negara': 'Inggris', 'password': 'surabaya',
+                                    'incoming': {}, 'outgoing': {}},
+                      'lineker': {'nama': 'Gary Lineker', 'negara': 'Inggris', 'password': 'surabaya', 'incoming': {},
+                                  'outgoing': {}},
+                      'maguire': {'nama': 'Harry Maguire', 'negara': 'Inggris', 'password': 'surabaya', 'incoming': {},
+                                  'outgoing': {}}}
+        self.servers = {'A': ServerToServerThread(self, '127.0.0.1', 8889),
+                        'B': ServerToServerThread(self, '127.0.0.1', 9000),
+                        'C': ServerToServerThread(self, '127.0.0.1', 9001)}
+        self.running_servers = []
 
     def proses(self, data):
         j = data.split(" ")
@@ -43,6 +73,9 @@ class Chat:
                 username = self.sessions[sessionid]['username']
                 logging.warning("INBOX: {}".format(sessionid))
                 return self.get_inbox(username)
+            elif command == 'connect':
+                server_id = j[1].strip()
+                return self.connect(server_id)
             else:
                 return {'status': 'ERROR', 'message': '**Protocol Tidak Benar'}
         except KeyError:
@@ -98,6 +131,14 @@ class Chat:
                 msgs[users].append(s_fr['incoming'][users].get_nowait())
 
         return {'status': 'OK', 'messages': msgs}
+
+    def connect(self, server_id):
+        if server_id in self.running_servers:
+            return {'status': 'ERROR', 'message': 'Server {} is already connected'.format(server_id)}
+        else:
+            self.servers[server_id].start()
+            self.running_servers.append(server_id)
+            return {'status: OK'}
 
 
 if __name__ == "__main__":
