@@ -85,7 +85,7 @@ class ChatClient:
 if __name__ == "__main__":
     server = 8999
     try:
-        server = sys.argv[1]
+        server = int(sys.argv[1])
     except:
         pass
 
