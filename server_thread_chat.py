@@ -60,7 +60,7 @@ class Server(threading.Thread):
 def main():
     portnumber = 8999
     try:
-        portnumber = sys.argv[1]
+        portnumber = int(sys.argv[1])
     except:
         pass
     svr = Server(portnumber)
