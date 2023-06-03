@@ -46,7 +46,7 @@ class Server(threading.Thread):
 
     def run(self):
         self.my_socket.bind(('0.0.0.0', self.portnumber))
-        logging.warning('Server berjalan di port', self.portnumber)
+        logging.warning('Server berjalan di port {}'.format(self.portnumber))
         self.my_socket.listen(1)
         while True:
             self.connection, self.client_address = self.my_socket.accept()
