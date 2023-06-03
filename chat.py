@@ -143,19 +143,3 @@ class Chat:
 
 if __name__ == "__main__":
     j = Chat()
-    sesi = j.proses("auth messi surabaya")
-    print(sesi)
-    # sesi = j.autentikasi_user('messi','surabaya')
-    # print sesi
-    tokenid = sesi['tokenid']
-    print(j.proses("send {} henderson hello gimana kabarnya son ".format(tokenid)))
-    print(j.proses("send {} messi hello gimana kabarnya mess ".format(tokenid)))
-
-    # print j.send_message(tokenid,'messi','henderson','hello son')
-    # print j.send_message(tokenid,'henderson','messi','hello si')
-    # print j.send_message(tokenid,'lineker','messi','hello si dari lineker')
-
-    print("isi mailbox dari messi")
-    print(j.get_inbox('messi'))
-    print("isi mailbox dari henderson")
-    print(j.get_inbox('henderson'))
