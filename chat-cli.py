@@ -69,6 +69,7 @@ class ChatClient:
         if self.tokenid == "":
             return "Error, not authorized"
         message = "connect {}".format(server_id)
+        logging.warning('connect success {}'.format(message))
         result = self.send_string(message)
         if result['status'] == 'OK':
             return 'Server {} succesfully connected'.format(server_id)
