@@ -32,7 +32,6 @@ class ChatClient:
                 return self.inbox()
             elif command == 'connect':
                 server_id = j[1].strip()
-                logging.warning('connect success {}'.format(server_id))
                 return self.connect(server_id)
             else:
                 return "*Maaf, command tidak benar"
@@ -68,8 +67,7 @@ class ChatClient:
     def connect(self, server_id):
         if self.tokenid == "":
             return "Error, not authorized"
-        message = "connect {}".format(server_id)
-        logging.warning('connect success {}'.format(message))
+        message = "connect {} \r\n".format(server_id)
         result = self.send_string(message)
         if result['status'] == 'OK':
             return 'Server {} succesfully connected'.format(server_id)
