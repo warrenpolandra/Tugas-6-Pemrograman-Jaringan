@@ -83,7 +83,7 @@ class ChatClient:
 
 
 if __name__ == "__main__":
-    server = 8999
+    server = 8889
     try:
         server = int(sys.argv[1])
     except:

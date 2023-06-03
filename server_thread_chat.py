@@ -58,7 +58,7 @@ class Server(threading.Thread):
 
 
 def main():
-    portnumber = 8999
+    portnumber = 8889
     try:
         portnumber = int(sys.argv[1])
     except:
