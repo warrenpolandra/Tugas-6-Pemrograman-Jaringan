@@ -1,3 +1,4 @@
+import logging
 import socket
 import os
 import sys
@@ -31,6 +32,7 @@ class ChatClient:
                 return self.inbox()
             elif command == 'connect':
                 server_id = j[1].strip()
+                logging.warning('connect success {}'.format(server_id))
                 return self.connect(server_id)
             else:
                 return "*Maaf, command tidak benar"
