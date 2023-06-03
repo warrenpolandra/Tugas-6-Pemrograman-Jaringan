@@ -63,7 +63,7 @@ def main():
         portnumber = sys.argv[1]
     except:
         pass
-    svr = Server([portnumber])
+    svr = Server(portnumber)
     svr.start()
 
 
