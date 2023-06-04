@@ -73,7 +73,7 @@ class Chat:
                 serverid = j[2].strip()
                 username = self.sessions[sessionid]['username']
                 logging.warning("INBOX: {}".format(sessionid))
-                return self.get_inbox(username, serverid)
+                return self.get_inbox(sessionid, username, serverid)
             elif command == 'connect':
                 server_id = j[1].strip()
                 return self.connect(server_id)
@@ -132,37 +132,48 @@ class Chat:
             inqueue_receiver[username_from].put(message)
         return {'status': 'OK', 'message': 'Message Sent'}
 
-    def get_inbox(self, username, serverid):
-        server_message = []
+    def get_inbox(self, sessionid, username, serverid):
+        if sessionid not in self.sessions:
+            return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
+        if serverid not in self.servers:
+            return {'status': 'ERROR', 'message': 'Realm Tidak Ada'}
+        username = self.sessions[sessionid]['username']
+        msgs = []
         while not self.servers[serverid].queue.empty():
-            server_message.append(self.servers[serverid].queue.get_nowait())
-
-        for message in server_message:
-            s_fr = self.get_user(message['msg_from'])
-            s_to = self.get_user(message['msg_to'])
-
-            outqueue_sender = s_fr['outgoing']
-            inqueue_receiver = s_to['incoming']
-
-            try:
-                outqueue_sender[message['msg_from']].put(message)
-            except KeyError:
-                outqueue_sender[message['msg_from']] = Queue()
-                outqueue_sender[message['msg_from']].put(message)
-            try:
-                inqueue_receiver[message['msg_from']].put(message)
-            except KeyError:
-                inqueue_receiver[message['msg_from']] = Queue()
-                inqueue_receiver[message['msg_from']].put(message)
-
-        s_fr = self.get_user(username)
-        incoming = s_fr['incoming']
-        msgs = {}
-        for users in incoming:
-            msgs[users] = []
-            while not incoming[users].empty():
-                msgs[users].append(s_fr['incoming'][users].get_nowait())
+            msgs.append(self.servers[serverid].queue.get_nowait())
         return {'status': 'OK', 'messages': msgs}
+
+    # def get_inbox(self, username, serverid):
+    #     server_message = []
+    #     while not self.servers[serverid].queue.empty():
+    #         server_message.append(self.servers[serverid].queue.get_nowait())
+    #
+    #     for message in server_message:
+    #         s_fr = self.get_user(message['msg_from'])
+    #         s_to = self.get_user(message['msg_to'])
+    #
+    #         outqueue_sender = s_fr['outgoing']
+    #         inqueue_receiver = s_to['incoming']
+    #
+    #         try:
+    #             outqueue_sender[message['msg_from']].put(message)
+    #         except KeyError:
+    #             outqueue_sender[message['msg_from']] = Queue()
+    #             outqueue_sender[message['msg_from']].put(message)
+    #         try:
+    #             inqueue_receiver[message['msg_from']].put(message)
+    #         except KeyError:
+    #             inqueue_receiver[message['msg_from']] = Queue()
+    #             inqueue_receiver[message['msg_from']].put(message)
+    #
+    #     s_fr = self.get_user(username)
+    #     incoming = s_fr['incoming']
+    #     msgs = {}
+    #     for users in incoming:
+    #         msgs[users] = []
+    #         while not incoming[users].empty():
+    #             msgs[users].append(s_fr['incoming'][users].get_nowait())
+    #     return {'status': 'OK', 'messages': msgs}
 
     def connect(self, server_id):
         if server_id in self.running_servers:
