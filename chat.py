@@ -70,9 +70,10 @@ class Chat:
                 return self.send_message(sessionid, usernamefrom, usernameto, message)
             elif command == 'inbox':
                 sessionid = j[1].strip()
+                serverid = j[2].strip()
                 username = self.sessions[sessionid]['username']
                 logging.warning("INBOX: {}".format(sessionid))
-                return self.get_inbox(username)
+                return self.get_inbox(username, serverid)
             elif command == 'connect':
                 server_id = j[1].strip()
                 return self.connect(server_id)
@@ -131,7 +132,29 @@ class Chat:
             inqueue_receiver[username_from].put(message)
         return {'status': 'OK', 'message': 'Message Sent'}
 
-    def get_inbox(self, username):
+    def get_inbox(self, username, serverid):
+        server_message = []
+        while not self.servers[serverid].queue.empty():
+            server_message.append(self.servers[serverid].queue.get_nowait())
+
+        for message in server_message:
+            s_fr = self.get_user(message['msg_from'])
+            s_to = self.get_user(message['msg_to'])
+
+            outqueue_sender = s_fr['outgoing']
+            inqueue_receiver = s_to['incoming']
+
+            try:
+                outqueue_sender[message['msg_from']].put(message)
+            except KeyError:
+                outqueue_sender[message['msg_from']] = Queue()
+                outqueue_sender[message['msg_from']].put(message)
+            try:
+                inqueue_receiver[message['msg_from']].put(message)
+            except KeyError:
+                inqueue_receiver[message['msg_from']] = Queue()
+                inqueue_receiver[message['msg_from']].put(message)
+
         s_fr = self.get_user(username)
         incoming = s_fr['incoming']
         msgs = {}
@@ -139,7 +162,6 @@ class Chat:
             msgs[users] = []
             while not incoming[users].empty():
                 msgs[users].append(s_fr['incoming'][users].get_nowait())
-
         return {'status': 'OK', 'messages': msgs}
 
     def connect(self, server_id):
