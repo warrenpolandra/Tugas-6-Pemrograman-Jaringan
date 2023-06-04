@@ -125,7 +125,7 @@ class Chat:
                                                                                                            group_usernames,
                                                                                                            realm_id))
                 return self.send_group_realm_message(sessionid, realm_id, group_usernames, message)
-            elif (command == 'getrealminbox'):
+            elif command == 'getrealminbox':
                 sessionid = j[1].strip()
                 realm_id = j[2].strip()
                 logging.warning("GETREALMINBOX: {} from realm {}".format(sessionid, realm_id))
@@ -147,7 +147,7 @@ class Chat:
         return {'status': 'OK', 'tokenid': tokenid}
 
     def get_user(self, username):
-        if (username not in self.users):
+        if username not in self.users:
             return False
         return self.users[username]
 
@@ -160,12 +160,12 @@ class Chat:
             return {'status': 'OK'}
 
     def send_message(self, sessionid, username_from, username_dest, message):
-        if (sessionid not in self.sessions):
+        if sessionid not in self.sessions:
             return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
         s_fr = self.get_user(username_from)
         s_to = self.get_user(username_dest)
 
-        if (s_fr == False or s_to == False):
+        if s_fr == False or s_to == False:
             return {'status': 'ERROR', 'message': 'User Tidak Ditemukan'}
 
         message = {'msg_from': s_fr['nama'], 'msg_to': s_to['nama'], 'msg': message}
