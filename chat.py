@@ -76,6 +76,17 @@ class Chat:
             elif command == 'connect':
                 server_id = j[1].strip()
                 return self.connect(server_id)
+            elif command == 'sendserver':
+                sessionid = j[1].strip()
+                address = j[2].strip().split("@")
+                usernameto = address[0]
+                serverid = address[1]
+                message = ""
+                for w in j[4:]:
+                    message = "{} {}".format(message, w)
+                logging.warning("SendServer: session {} send message from {} to {} in server {}".format(
+                    sessionid, self.sessions[sessionid]['username'], usernameto, serverid))
+                return self.send_server_message(sessionid, serverid, usernameto, message)
             else:
                 return {'status': 'ERROR', 'message': '**Protocol Tidak Benar'}
         except KeyError:
@@ -139,6 +150,17 @@ class Chat:
             self.servers[server_id].start()
             self.running_servers.append(server_id)
             return {'status': 'OK'}
+
+    def send_server_message(self, sessionid, server_id, username_to, message):
+        if sessionid not in self.sessions:
+            return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
+        if server_id not in self.servers:
+            return {'status': 'ERROR', 'message': 'Server Tidak Ada'}
+        username_from = self.sessions[sessionid]['username']
+        message = {'msg_from': username_from, 'msg_to': username_to, 'msg': message}
+        self.servers[server_id].put(message)
+        self.servers[server_id].queue.put(message)
+        return {'status': 'OK', 'message': 'Message Sent to Server {}'.format(server_id)}
 
 
 if __name__ == "__main__":

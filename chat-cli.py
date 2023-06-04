@@ -9,8 +9,16 @@ TARGET_IP = "127.0.0.1"
 
 class ChatClient:
     def __init__(self, server):
+        self.server = server
+        self.portnumber = 8889
+        if server == 'A':
+            self.portnumber = 8889
+        elif server == 'B':
+            self.portnumber = 9000
+        elif server == 'C':
+            self.portnumber = 90001
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_address = (TARGET_IP, server)
+        self.server_address = (TARGET_IP, self.portnumber)
         self.sock.connect(self.server_address)
         self.tokenid = ""
 
@@ -23,11 +31,16 @@ class ChatClient:
                 password = j[2].strip()
                 return self.login(username, password)
             elif command == 'send':
-                usernameto = j[1].strip()
+                address = j[1].strip().split('@')
+                usernameto = address[0].strip()
+                serverto = address[1].strip()
                 message = ""
                 for w in j[2:]:
                     message = "{} {}".format(message, w)
-                return self.send_message(usernameto, message)
+                if serverto == self.server:
+                    return self.send_message(usernameto, message)
+                else:
+                    return self.send_message_to_server()
             elif command == 'inbox':
                 return self.inbox()
             elif command == 'connect':
@@ -95,13 +108,27 @@ class ChatClient:
         else:
             return "Error, {}".format(result['message'])
 
+    def send_message_to_server(self, serverid, usernameto, message):
+        if self.tokenid == "":
+            return "Error, not authorized"
+        string = "sendserver {} {} {} {} \r\n".format(self.tokenid, serverid, usernameto, message)
+        result = self.send_string(string)
+        if result['status'] == 'OK':
+            return "Message sent to server {}".format(serverid)
+        else:
+            return "Error: {}".format(result['message'])
+
 
 if __name__ == "__main__":
-    server = 8889
+    server = 'A'
     try:
-        server = int(sys.argv[1])
+        server = sys.argv[1]
     except:
         pass
+
+    if server != 'A' and server != 'B' and server != 'C':
+        logging.warning("Server not exists")
+        sys.exit()
 
     cc = ChatClient(server)
     while True:
