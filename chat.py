@@ -79,10 +79,10 @@ class Chat:
             elif command == 'sendserver':
                 sessionid = j[1].strip()
                 address = j[2].strip().split("@")
-                usernameto = address[0]
-                serverid = address[1]
+                usernameto = address[0].strip()
+                serverid = address[1].strip()
                 message = ""
-                for w in j[4:]:
+                for w in j[3:]:
                     message = "{} {}".format(message, w)
                 logging.warning("SendServer: session {} send message from {} to {} in server {}".format(
                     sessionid, self.sessions[sessionid]['username'], usernameto, serverid))
