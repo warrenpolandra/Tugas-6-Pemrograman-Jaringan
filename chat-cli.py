@@ -40,7 +40,7 @@ class ChatClient:
                 if serverto == self.server:
                     return self.send_message(usernameto, message)
                 else:
-                    return self.send_message_to_server()
+                    return self.send_message_to_server(serverto, usernameto, message)
             elif command == 'inbox':
                 return self.inbox()
             elif command == 'connect':
