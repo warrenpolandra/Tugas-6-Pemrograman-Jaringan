@@ -132,7 +132,7 @@ class Chat:
             inqueue_receiver[username_from].put(message)
         return {'status': 'OK', 'message': 'Message Sent'}
 
-    def get_inbox(self, sessionid, username, serverid):
+    def get_inbox(self, sessionid, serverid):
         if sessionid not in self.sessions:
             return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
         if serverid not in self.servers:
@@ -192,7 +192,8 @@ class Chat:
         message = {'msg_from': username_from, 'msg_to': username_to, 'msg': message}
         self.servers[server_id].put(message)
         self.servers[server_id].queue.put(message)
-        return {'status': 'OK', 'message': 'Message Sent to Server {}'.format(server_id)}
+        return {'status': 'OK', 'message': 'Message Sent to Server {} {}'.format(server_id, self.servers[server_id]
+                                                                                 .queue.get_nowait())}
 
 
 if __name__ == "__main__":
