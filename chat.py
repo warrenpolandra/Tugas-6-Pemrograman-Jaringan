@@ -48,7 +48,7 @@ class Chat:
         self.running_servers = []
         self.groups = {'groupA': ['messi@A', 'lineker@A', 'maguire@A'],
                        'groupB': ['messi@A', 'lineker@B', 'maguire@B'],
-                       'groupC': ['messi@A', 'ronaldo@A', 'henderson@A']}
+                       'groupC': ['messi@A', 'ronaldo@A', 'henderson@B']}
 
     def proses(self, data):
         j = data.split(" ")
@@ -164,6 +164,8 @@ class Chat:
     def send_group_message(self, sessionid, username_from, group_id, server_from, message):
         if sessionid not in self.sessions:
             return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
+        if group_id not in self.groups:
+            return {'status': 'ERROR', 'message': 'Group Tidak Ditemukan'}
         s_fr = self.get_user(username_from)
         if s_fr is False:
             return {'status': 'ERROR', 'message': 'User Tidak Ditemukan'}
