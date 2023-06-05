@@ -42,9 +42,7 @@ class Chat:
                                     'incoming': {}, 'outgoing': {}},
                       'lineker': {'nama': 'Gary Lineker', 'negara': 'Inggris', 'password': 'surabaya', 'incoming': {},
                                   'outgoing': {}}}
-        self.servers = {'A': ServerToServerThread(self, '127.0.0.1', 8889),
-                        'B': ServerToServerThread(self, '127.0.0.1', 9000),
-                        'C': ServerToServerThread(self, '127.0.0.1', 9001)}
+        self.servers = {}
         self.running_servers = []
 
     def proses(self, data):
@@ -56,9 +54,6 @@ class Chat:
                 password = j[2].strip()
                 logging.warning("AUTH: auth {} {}".format(username, password))
                 return self.autentikasi_user(username, password)
-            elif command == 'connect':
-                server_id = j[1].strip()
-                return self.connect(server_id)
             elif command == 'send':
                 sessionid = j[1].strip()
                 usernameto = j[2].strip()
@@ -111,7 +106,7 @@ class Chat:
                                                                                                       usernameto,
                                                                                                       realm_id))
                 return self.send_realm_message(sessionid, realm_id, usernameto, message)
-            elif (command == 'sendgrouprealm'):
+            elif command == 'sendgrouprealm':
                 sessionid = j[1].strip()
                 realm_id = j[2].strip()
                 group_usernames = j[3].strip().split(',')
@@ -150,14 +145,6 @@ class Chat:
         if username not in self.users:
             return False
         return self.users[username]
-
-    def connect(self, server_id):
-        if server_id in self.running_servers:
-            return {'status': 'ERROR', 'message': 'Server {} is already connected'.format(server_id)}
-        else:
-            self.servers[server_id].start()
-            self.running_servers.append(server_id)
-            return {'status': 'OK'}
 
     def send_message(self, sessionid, username_from, username_dest, message):
         if sessionid not in self.sessions:
