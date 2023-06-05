@@ -24,8 +24,6 @@ class ServerToServerThread(threading.Thread):
             while not self.queue.empty():
                 msg = self.queue.get()
                 self.sock.sendall(msg.encode())
-                data = self.sock.recv(1024)
-                logging.warning("Message from server: {}" .format(data))
 
     def put(self, msg):
         self.queue.put(msg)
@@ -40,12 +38,17 @@ class Chat:
                                     'incoming': {}, 'outgoing': {}},
                       'lineker': {'nama': 'Gary Lineker', 'negara': 'Inggris', 'password': 'surabaya', 'incoming': {},
                                   'outgoing': {}},
+                      'ronaldo': {'nama': 'Christiano Ronaldo', 'negara': 'Portugal', 'password': 'surabaya',
+                                  'incoming': {}, 'outgoing': {}},
                       'maguire': {'nama': 'Harry Maguire', 'negara': 'Inggris', 'password': 'surabaya', 'incoming': {},
                                   'outgoing': {}}}
         self.servers = {'A': ServerToServerThread(self, '127.0.0.1', 8889),
                         'B': ServerToServerThread(self, '127.0.0.1', 9000),
                         'C': ServerToServerThread(self, '127.0.0.1', 9001)}
         self.running_servers = []
+        self.groups = {'groupA': ['messi@A', 'lineker@A', 'maguire@A'],
+                       'groupB': ['messi@A', 'lineker@B', 'maguire@B'],
+                       'groupC': ['messi@A', 'ronaldo@A', 'henderson@A']}
 
     def proses(self, data):
         j = data.split(" ")
@@ -73,14 +76,14 @@ class Chat:
                 return self.get_inbox(username)
             elif command == 'sendgroup':
                 sessionid = j[1].strip()
-                group_usernames = j[2].strip().split(',')
+                group_id = j[2].strip()
+                server_from = j[3].strip()
                 message = ""
-                for w in j[3:]:
+                for w in j[4:]:
                     message = "{} {}".format(message, w)
                 usernamefrom = self.sessions[sessionid]['username']
-                logging.warning(
-                    "SEND: session {} send message from {} to {}".format(sessionid, usernamefrom, group_usernames))
-                return self.send_group_message(sessionid, usernamefrom, group_usernames, message)
+                logging.warning("SEND: session {} sent message from {} to {}".format(sessionid, usernamefrom, group_id))
+                return self.send_group_message(sessionid, usernamefrom, group_id, server_from, message)
             elif command == 'connect':
                 server_id = j[1].strip()
                 return self.connect(server_id)
@@ -91,12 +94,12 @@ class Chat:
                 message = ""
                 for w in j[4:]:
                     message = "{} {}".format(message, w)
-                logging.warning("SendServer: session {} send message from {} to {} in realm {}".format(sessionid,
-                                                                                                      self.sessions[
-                                                                                                          sessionid][
-                                                                                                          'username'],
-                                                                                                      usernameto,
-                                                                                                      server_id))
+                logging.warning("SendServer: session {} sent message from {} to {}@{}".format(sessionid,
+                                                                                              self.sessions[
+                                                                                                  sessionid][
+                                                                                                  'username'],
+                                                                                              usernameto,
+                                                                                              server_id))
                 return self.send_to_other_server(sessionid, server_id, usernameto, message)
             elif command == 'sendgrouprealm':
                 sessionid = j[1].strip()
@@ -154,7 +157,7 @@ class Chat:
         s_fr = self.get_user(username_from)
         s_to = self.get_user(username_dest)
 
-        if s_fr == False or s_to == False:
+        if s_fr is False or s_to is False:
             return {'status': 'ERROR', 'message': 'User Tidak Ditemukan'}
 
         message = {'msg_from': s_fr['nama'], 'msg_to': s_to['nama'], 'msg': message}
@@ -172,30 +175,32 @@ class Chat:
             inqueue_receiver[username_from].put(message)
         return {'status': 'OK', 'message': 'Message Sent'}
 
-    def send_group_message(self, sessionid, username_from, group_usernames, message):
+    def send_group_message(self, sessionid, username_from, group_id, server_from, message):
         if sessionid not in self.sessions:
             return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
         s_fr = self.get_user(username_from)
         if s_fr is False:
             return {'status': 'ERROR', 'message': 'User Tidak Ditemukan'}
-        for username_dest in group_usernames:
-            s_to = self.get_user(username_dest)
+        if username_from + '@' + server_from not in self.groups[group_id]:
+            return {'status': 'ERROR', 'message': 'User Tidak Ada dalam {}' .format(group_id)}
+        sent_id = []
+        for member in self.groups[group_id]:
+            address = member.split("@")
+            username_to = address[0].strip()
+            server_to = address[1].strip()
+            s_to = self.get_user(username_to)
             if s_to is False:
                 continue
-            message = {'msg_from': s_fr['nama'], 'msg_to': s_to['nama'], 'msg': message}
-            outqueue_sender = s_fr['outgoing']
-            inqueue_receiver = s_to['incoming']
-            try:
-                outqueue_sender[username_from].put(message)
-            except KeyError:
-                outqueue_sender[username_from] = Queue()
-                outqueue_sender[username_from].put(message)
-            try:
-                inqueue_receiver[username_from].put(message)
-            except KeyError:
-                inqueue_receiver[username_from] = Queue()
-                inqueue_receiver[username_from].put(message)
-        return {'status': 'OK', 'message': 'Message Sent'}
+            if server_to not in self.servers:
+                continue
+            if server_to == server_from:
+                self.send_message(sessionid, username_from, username_to, message)
+                sent_id.append(username_to)
+            else:
+                self.send_to_other_server(sessionid, server_to, username_to, message)
+                sent_id.append(s_to['nama'])
+
+        return {'status': 'OK', 'message': 'Message Sent to {} in {}'.format(', '.join(sent_id), group_id)}
 
     def get_inbox(self, username):
         s_fr = self.get_user(username)

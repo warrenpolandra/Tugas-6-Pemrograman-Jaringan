@@ -44,11 +44,11 @@ class ChatClient:
                 else:
                     return self.send_message_to_server(serverto, usernameto, message)
             elif command == 'sendgroup':
-                group_usernames = j[1].strip()
+                group_id = j[1].strip()
                 message = ""
                 for w in j[2:]:
                     message = "{} {}" . format(message, w)
-                return self.sendgroupmessage(group_usernames, message)
+                return self.sendgroupmessage(group_id, message)
             elif command == 'inbox':
                 return self.inbox()
             elif command == 'sendgrouprealm':
@@ -131,15 +131,14 @@ class ChatClient:
         else:
             return "Error, {}" . format(result['message'])
 
-    def sendgroupmessage(self, group_usernames="xxx,yyy", message="xxx"):
+    def sendgroupmessage(self, group_id="xxx,", message="xxx"):
         if self.tokenid == "":
             return "Error, not authorized"
-        string = "sendgroup {} {} {} \r\n" . format(
-            self.tokenid, group_usernames, message)
+        string = "sendgroup {} {} {} {}\r\n" . format(self.tokenid, group_id, self.server, message)
         print(string)
         result = self.sendstring(string)
         if result['status'] == 'OK':
-            return "message sent to {}" . format(group_usernames)
+            return "message sent to {}" . format(group_id)
         else:
             return "Error, {}" . format(result['message'])
 
