@@ -14,6 +14,7 @@ class RealmCommunicationThread(threading.Thread):
         self.target_realm_address = target_realm_address
         self.target_realm_port = target_realm_port
         self.queue = Queue()  # Queue for outgoing messages to the other realm
+        self.queue.put("haloo")
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         threading.Thread.__init__(self)
 
@@ -21,7 +22,6 @@ class RealmCommunicationThread(threading.Thread):
         self.sock.connect((self.target_realm_address, self.target_realm_port))
         while True:
             # Check if there are messages to be sent
-            logging.warning("MESSAGEQUEUE:")
             while not self.queue.empty():
                 msg = self.queue.get()
                 logging.warning("MESSAGEQUEUE: {}" .format(msg))
