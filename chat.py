@@ -21,6 +21,7 @@ class RealmCommunicationThread(threading.Thread):
         self.sock.connect((self.target_realm_address, self.target_realm_port))
         while True:
             # Check if there are messages to be sent
+            logging.warning("MESSAGEQUEUE:")
             while not self.queue.empty():
                 msg = self.queue.get()
                 logging.warning("MESSAGEQUEUE: {}" .format(msg))
