@@ -13,14 +13,13 @@ class ServerToServerThread(threading.Thread):
         self.chat = chat
         self.target_server_address = target_server
         self.target_server_port = target_port
-        self.queue = Queue()  # Queue for outgoing messages to the other server
+        self.queue = Queue()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         threading.Thread.__init__(self)
 
     def run(self):
         self.sock.connect((self.target_server_address, self.target_server_port))
         while True:
-            # Check if there are messages to be sent
             while not self.queue.empty():
                 msg = self.queue.get()
                 self.sock.sendall(msg.encode())
