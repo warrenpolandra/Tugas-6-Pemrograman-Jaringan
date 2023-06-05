@@ -14,7 +14,6 @@ class RealmCommunicationThread(threading.Thread):
         self.target_realm_address = target_realm_address
         self.target_realm_port = target_realm_port
         self.queue = Queue()  # Queue for outgoing messages to the other realm
-        self.queue.put("haloo")
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         threading.Thread.__init__(self)
 
@@ -24,16 +23,15 @@ class RealmCommunicationThread(threading.Thread):
             # Check if there are messages to be sent
             while not self.queue.empty():
                 msg = self.queue.get()
-                logging.warning("MESSAGEQUEUE: {}".format(msg))
-                self.sock.sendall("auth \r\n".encode())
+                self.sock.sendall(msg.encode())
 
-            # Menerima data dari realm lain
-            data = self.sock.recv(1024)
-            if data:
-                command = data.decode()
-                response = self.chat.proses(command)
-                # Mengirim balasan ke realm lain
-                self.sock.sendall(json.dumps(response).encode())
+            # # Menerima data dari realm lain
+            # data = self.sock.recv(1024)
+            # if data:
+            #     command = data.decode()
+            #     response = self.chat.proses(command)
+            #     # Mengirim balasan ke realm lain
+            #     self.sock.sendall(json.dumps(response).encode())
 
     def put(self, msg):
         self.queue.put(msg)
@@ -129,12 +127,36 @@ class Chat:
                 realm_id = j[2].strip()
                 logging.warning("GETREALMINBOX: {} from realm {}".format(sessionid, realm_id))
                 return self.get_realm_inbox(sessionid, realm_id)
+            elif command == 'server_inbox':
+                username_from = j[1].strip()
+                username_to = j[2].strip()
+                message = ""
+                for w in j[3:]:
+                    message = "{} {}".format(message, w)
+                self.server_inbox(username_from, username_to, message)
             else:
                 return {'status': 'ERROR', 'message': '**Protocol Tidak Benar'}
         except KeyError:
             return {'status': 'ERROR', 'message': 'Informasi tidak ditemukan'}
         except IndexError:
             return {'status': 'ERROR', 'message': '--Protocol Tidak Benar'}
+
+    def server_inbox(self, username_from, username_to, message):
+        s_fr = self.get_user(username_from)
+        s_to = self.get_user(username_to)
+        message = {'msg_from': s_fr['nama'], 'msg_to': s_to['nama'], 'msg': message}
+        outqueue_sender = s_fr['outgoing']
+        inqueue_receiver = s_to['incoming']
+        try:
+            outqueue_sender[username_from].put(message)
+        except KeyError:
+            outqueue_sender[username_from] = Queue()
+            outqueue_sender[username_from].put(message)
+        try:
+            inqueue_receiver[username_from].put(message)
+        except KeyError:
+            inqueue_receiver[username_from] = Queue()
+            inqueue_receiver[username_from].put(message)
 
     def autentikasi_user(self, username, password):
         if username not in self.users:
@@ -220,7 +242,7 @@ class Chat:
             return {'status': 'ERROR', 'message': 'Realm Tidak Ada'}
         username_from = self.sessions[sessionid]['username']
         message = {'msg_from': username_from, 'msg_to': username_to, 'msg': message}
-        self.realms[realm_id].put(message)
+        self.realms[realm_id].put('server_inbox {} {} {} \r\n'.format(username_from, username_to, message))
         self.realms[realm_id].queue.put(message)
         return {'status': 'OK', 'message': 'Message Sent to Realm'}
 
