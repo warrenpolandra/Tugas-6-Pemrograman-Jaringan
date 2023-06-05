@@ -17,7 +17,7 @@ class ChatClient:
         elif server == 'C':
             self.portnumber = 9001
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_address = (TARGET_IP, server)
+        self.server_address = (TARGET_IP, self.portnumber)
         self.sock.connect(self.server_address)
         self.tokenid = ""
 
