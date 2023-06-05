@@ -62,7 +62,7 @@ class ChatClient:
                 for w in j[3:]:
                     message = "{} {}" . format(message, w)
                 return self.send_group_realm_message(realm_id, group_usernames, message)
-            elif command == 'getrealminbox':
+            elif (command == 'getrealminbox'):
                 realm_id = j[1].strip()
                 return self.get_realm_inbox(realm_id)
             else:
@@ -77,7 +77,7 @@ class ChatClient:
             while True:
                 data = self.sock.recv(64)
                 print("diterima dari server", data)
-                if data:
+                if (data):
                     # data harus didecode agar dapat di operasikan dalam bentuk string
                     receivemsg = "{}{}" . format(receivemsg, data.decode())
                     if receivemsg[-4:] == '\r\n\r\n':
