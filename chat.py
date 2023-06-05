@@ -26,13 +26,13 @@ class RealmCommunicationThread(threading.Thread):
                 msg = self.queue.get()
                 logging.warning("MESSAGEQUEUE: {}" .format(msg))
                 self.sock.sendall(json.dumps(msg).encode())
-            # Menerima data dari realm lain
-            data = self.sock.recv(1024)
-            if data:
-                command = data.decode()
-                response = self.chat.proses(command)
-                # Mengirim balasan ke realm lain
-                self.sock.sendall(json.dumps(response).encode())
+                # Menerima data dari realm lain
+                data = self.sock.recv(1024)
+                if data:
+                    command = data.decode()
+                    response = self.chat.proses(command)
+                    # Mengirim balasan ke realm lain
+                    self.sock.sendall(json.dumps(response).encode())
 
     def put(self, msg):
         self.queue.put(msg)
