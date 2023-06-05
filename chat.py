@@ -246,9 +246,7 @@ class Chat:
         if realm_id not in self.servers:
             return {'status': 'ERROR', 'message': 'Realm Tidak Ada'}
         username_from = self.sessions[sessionid]['username']
-        message = {'msg_from': username_from, 'msg_to': username_to, 'msg': message}
         self.servers[realm_id].put('server_inbox {} {} {} \r\n'.format(username_from, username_to, message))
-        self.servers[realm_id].queue.put(message)
         return {'status': 'OK', 'message': 'Message Sent to Realm'}
 
     def send_group_realm_message(self, sessionid, realm_id, group_usernames, message):
