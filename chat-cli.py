@@ -21,6 +21,9 @@ class ChatClient:
                 username = j[1].strip()
                 password = j[2].strip()
                 return self.login(username, password)
+            elif command == 'connect':
+                server_id = j[1].strip()
+                return self.connect(server_id)
             elif command == 'send':
                 usernameto = j[1].strip()
                 message = ""
@@ -87,6 +90,16 @@ class ChatClient:
             return "username {} logged in, token {} " .format(username, self.tokenid)
         else:
             return "Error, {}" . format(result['message'])
+
+    def connect(self, server_id):
+        if self.tokenid == "":
+            return "Error, not authorized"
+        message = "connect {} \r\n".format(server_id)
+        result = self.sendstring(message)
+        if result['status'] == 'OK':
+            return 'Server {} succesfully connected'.format(server_id)
+        else:
+            return "Error: {}".format(result['message'])
 
     def sendmessage(self, usernameto="xxx", message="xxx"):
         if self.tokenid == "":
