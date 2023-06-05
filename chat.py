@@ -24,14 +24,8 @@ class ServerToServerThread(threading.Thread):
             while not self.queue.empty():
                 msg = self.queue.get()
                 self.sock.sendall(msg.encode())
-
-            # # Menerima data dari realm lain
-            # data = self.sock.recv(1024)
-            # if data:
-            #     command = data.decode()
-            #     response = self.chat.proses(command)
-            #     # Mengirim balasan ke realm lain
-            #     self.sock.sendall(json.dumps(response).encode())
+                data = self.sock.recv(1024)
+                logging.warning("Message from server: {}" .format(data))
 
     def put(self, msg):
         self.queue.put(msg)
@@ -124,7 +118,7 @@ class Chat:
                 message = ""
                 for w in j[3:]:
                     message = "{} {}".format(message, w)
-                self.server_inbox(username_from, username_to, message)
+                return self.server_inbox(username_from, username_to, message)
             else:
                 return {'status': 'ERROR', 'message': '**Protocol Tidak Benar'}
         except KeyError:
@@ -216,6 +210,8 @@ class Chat:
     def server_inbox(self, username_from, username_to, message):
         s_fr = self.get_user(username_from)
         s_to = self.get_user(username_to)
+        if s_fr == False or s_to == False:
+            return {'status': 'ERROR', 'message': 'User Tidak Ditemukan'}
         message = {'msg_from': s_fr['nama'], 'msg_to': s_to['nama'], 'msg': message}
         outqueue_sender = s_fr['outgoing']
         inqueue_receiver = s_to['incoming']
@@ -229,14 +225,15 @@ class Chat:
         except KeyError:
             inqueue_receiver[username_from] = Queue()
             inqueue_receiver[username_from].put(message)
+        return {'status': 'OK', 'message': 'Message Sent'}
 
-    def send_to_other_server(self, sessionid, realm_id, username_to, message):
+    def send_to_other_server(self, sessionid, server_id, username_to, message):
         if sessionid not in self.sessions:
             return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
-        if realm_id not in self.servers:
+        if server_id not in self.servers:
             return {'status': 'ERROR', 'message': 'Server Tidak Ada'}
         username_from = self.sessions[sessionid]['username']
-        self.servers[realm_id].put('server_inbox {} {} {}'.format(username_from, username_to, message))
+        self.servers[server_id].put('server_inbox {} {} {}'.format(username_from, username_to, message))
         return {'status': 'OK', 'message': 'Message Sent to Server'}
 
     def send_group_realm_message(self, sessionid, realm_id, group_usernames, message):

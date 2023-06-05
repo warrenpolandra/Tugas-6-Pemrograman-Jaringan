@@ -146,7 +146,7 @@ class ChatClient:
     def send_group_realm_message(self, realm_id, group_usernames, message):
         if self.tokenid == "":
             return "Error, not authorized"
-        string = "sendgrouprealm {} {} {} {} \r\n" . format(
+        string = "sendgrouprealm {} {} {} {}\r\n" . format(
             self.tokenid, realm_id, ','.join(group_usernames), message)
         print(string)
         result = self.sendstring(string)
