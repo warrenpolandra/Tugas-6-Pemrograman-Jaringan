@@ -51,13 +51,6 @@ class ChatClient:
                 return self.sendgroupmessage(group_id, message)
             elif command == 'inbox':
                 return self.inbox()
-            elif command == 'sendgrouprealm':
-                realm_id = j[1].strip()
-                group_usernames = j[2].strip()
-                message = ""
-                for w in j[3:]:
-                    message = "{} {}" . format(message, w)
-                return self.send_group_realm_message(realm_id, group_usernames, message)
             else:
                 return "*Maaf, command tidak benar"
         except IndexError:
@@ -131,7 +124,7 @@ class ChatClient:
         else:
             return "Error, {}" . format(result['message'])
 
-    def sendgroupmessage(self, group_id="xxx,", message="xxx"):
+    def sendgroupmessage(self, group_id="xxx", message="xxx"):
         if self.tokenid == "":
             return "Error, not authorized"
         string = "sendgroup {} {} {} {}\r\n" . format(self.tokenid, group_id, self.server, message)
@@ -141,18 +134,6 @@ class ChatClient:
             return "message sent to {}" . format(group_id)
         else:
             return "Error, {}" . format(result['message'])
-
-    def send_group_realm_message(self, realm_id, group_usernames, message):
-        if self.tokenid == "":
-            return "Error, not authorized"
-        string = "sendgrouprealm {} {} {} {}\r\n" . format(
-            self.tokenid, realm_id, ','.join(group_usernames), message)
-        print(string)
-        result = self.sendstring(string)
-        if result['status'] == 'OK':
-            return "message sent to group {} in realm {}" .format(group_usernames, realm_id)
-        else:
-            return "Error {}".format(result['message'])
 
 
 if __name__ == "__main__":

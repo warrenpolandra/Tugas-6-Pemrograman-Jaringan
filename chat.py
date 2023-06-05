@@ -9,16 +9,16 @@ import socket
 
 
 class ServerToServerThread(threading.Thread):
-    def __init__(self, chat, target_realm_address, target_realm_port):
+    def __init__(self, chat, target_server, target_port):
         self.chat = chat
-        self.target_realm_address = target_realm_address
-        self.target_realm_port = target_realm_port
-        self.queue = Queue()  # Queue for outgoing messages to the other realm
+        self.target_server_address = target_server
+        self.target_server_port = target_port
+        self.queue = Queue()  # Queue for outgoing messages to the other server
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         threading.Thread.__init__(self)
 
     def run(self):
-        self.sock.connect((self.target_realm_address, self.target_realm_port))
+        self.sock.connect((self.target_server_address, self.target_server_port))
         while True:
             # Check if there are messages to be sent
             while not self.queue.empty():
@@ -101,20 +101,6 @@ class Chat:
                                                                                               usernameto,
                                                                                               server_id))
                 return self.send_to_other_server(sessionid, server_id, usernameto, message)
-            elif command == 'sendgrouprealm':
-                sessionid = j[1].strip()
-                realm_id = j[2].strip()
-                group_usernames = j[3].strip().split(',')
-                message = ""
-                for w in j[4:]:
-                    message = "{} {}".format(message, w)
-                logging.warning("SENDGROUPREALM: session {} send message from {} to {} in realm {}".format(sessionid,
-                                                                                                           self.sessions[
-                                                                                                               sessionid][
-                                                                                                               'username'],
-                                                                                                           group_usernames,
-                                                                                                           realm_id))
-                return self.send_group_realm_message(sessionid, realm_id, group_usernames, message)
             elif command == 'server_inbox':
                 username_from = j[1].strip()
                 username_to = j[2].strip()
@@ -184,14 +170,14 @@ class Chat:
         if username_from + '@' + server_from not in self.groups[group_id]:
             return {'status': 'ERROR', 'message': 'User Tidak Ada dalam {}' .format(group_id)}
         sent_id = []
+        sender = username_from + "@" + server_from
+
         for member in self.groups[group_id]:
             address = member.split("@")
             username_to = address[0].strip()
             server_to = address[1].strip()
             s_to = self.get_user(username_to)
-            if s_to is False:
-                continue
-            if server_to not in self.servers:
+            if s_to is False or server_to not in self.servers or member is sender:
                 continue
             if server_to == server_from:
                 self.send_message(sessionid, username_from, username_to, message)
@@ -240,18 +226,6 @@ class Chat:
         username_from = self.sessions[sessionid]['username']
         self.servers[server_id].put('server_inbox {} {} {}'.format(username_from, username_to, message))
         return {'status': 'OK', 'message': 'Message Sent to Server'}
-
-    def send_group_realm_message(self, sessionid, realm_id, group_usernames, message):
-        if sessionid not in self.sessions:
-            return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
-        if realm_id not in self.servers:
-            return {'status': 'ERROR', 'message': 'Realm Tidak Ada'}
-        username_from = self.sessions[sessionid]['username']
-        for username_to in group_usernames:
-            message = {'msg_from': username_from, 'msg_to': username_to, 'msg': message}
-            self.servers[realm_id].put(message)
-            self.servers[realm_id].queue.put(message)
-        return {'status': 'OK', 'message': 'Message Sent to Group in Realm'}
 
 
 if __name__ == "__main__":
