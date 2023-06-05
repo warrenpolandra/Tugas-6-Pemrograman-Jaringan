@@ -8,6 +8,14 @@ TARGET_IP = "127.0.0.1"
 
 class ChatClient:
     def __init__(self, server):
+        self.server = server
+        self.portnumber = 8889
+        if server == 'A':
+            self.portnumber = 8889
+        elif server == 'B':
+            self.portnumber = 9000
+        elif server == 'C':
+            self.portnumber = 9001
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_address = (TARGET_IP, server)
         self.sock.connect(self.server_address)
@@ -25,11 +33,16 @@ class ChatClient:
                 server_id = j[1].strip()
                 return self.connect(server_id)
             elif command == 'send':
-                usernameto = j[1].strip()
+                address = j[1].strip().split('@')
+                usernameto = address[0].strip()
+                serverto = address[1].strip()
                 message = ""
                 for w in j[2:]:
-                    message = "{} {}" . format(message, w)
-                return self.sendmessage(usernameto, message)
+                    message = "{} {}".format(message, w)
+                if serverto == self.server:
+                    return self.send_message(usernameto, message)
+                else:
+                    return self.send_message_to_server(serverto, usernameto, message)
             elif command == 'sendgroup':
                 group_usernames = j[1].strip()
                 message = ""
@@ -43,13 +56,6 @@ class ChatClient:
                 target_realm_address = j[2].strip()
                 target_realm_port = j[3].strip()
                 return self.add_realm(realm_id, target_realm_address, target_realm_port)
-            elif command == 'sendrealm':
-                realm_id = j[1].strip()
-                username_to = j[2].strip()
-                message = ""
-                for w in j[3:]:
-                    message = "{} {}".format(message, w)
-                return self.send_realm_message(realm_id, username_to, message)
             elif command == 'sendgrouprealm':
                 realm_id = j[1].strip()
                 group_usernames = j[2].strip()
@@ -101,10 +107,10 @@ class ChatClient:
         else:
             return "Error: {}".format(result['message'])
 
-    def sendmessage(self, usernameto="xxx", message="xxx"):
+    def send_message(self, usernameto="xxx", message="xxx"):
         if self.tokenid == "":
             return "Error, not authorized"
-        string = "send {} {} {} \r\n" . format(
+        string = "send {} {} {}\r\n" . format(
             self.tokenid, usernameto, message)
         print(string)
         result = self.sendstring(string)
@@ -112,6 +118,16 @@ class ChatClient:
             return "message sent to {}" . format(usernameto)
         else:
             return "Error, {}" . format(result['message'])
+
+    def send_message_to_server(self, serverid, usernameto, message):
+        if self.tokenid == "":
+            return "Error, not authorized"
+        string = "sendrealm {} {} {} {}".format(self.tokenid, serverid, usernameto, message)
+        result = self.sendstring(string)
+        if result['status'] == 'OK':
+            return "Message sent to server {}".format(serverid)
+        else:
+            return "Error: {}".format(result['message'])
 
     def inbox(self):
         if self.tokenid == "":
@@ -146,17 +162,6 @@ class ChatClient:
         else:
             return "Error, {}" . format(result['message'])
 
-    def send_realm_message(self, realm_id, username_to, message):
-        if self.tokenid == "":
-            return "Error, not authorized"
-        string = "sendrealm {} {} {} {} \r\n" . format(
-            self.tokenid, realm_id, username_to, message)
-        result = self.sendstring(string)
-        if result['status'] == 'OK':
-            return "Message sent to realm {}".format(realm_id)
-        else:
-            return "Error, {}".format(result['message'])
-
     def send_group_realm_message(self, realm_id, group_usernames, message):
         if self.tokenid == "":
             return "Error, not authorized"
@@ -183,11 +188,15 @@ class ChatClient:
 
 
 if __name__ == "__main__":
-    server = 8889
+    server = 'A'
     try:
-        server = int(sys.argv[1])
+        server = sys.argv[1]
     except:
         pass
+
+    if server != 'A' and server != 'B' and server != 'C':
+        print("Server tidak ada!")
+        sys.exit()
 
     cc = ChatClient(server)
     while True:
