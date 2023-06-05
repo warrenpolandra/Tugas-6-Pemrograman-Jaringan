@@ -149,7 +149,7 @@ class ChatClient:
     def send_realm_message(self, realm_id, username_to, message):
         if self.tokenid == "":
             return "Error, not authorized"
-        string = "sendrealm {} {} {} \r\n" . format(
+        string = "sendrealm {} {} {} {} \r\n" . format(
             self.tokenid, realm_id, username_to, message)
         result = self.sendstring(string)
         if result['status'] == 'OK':
