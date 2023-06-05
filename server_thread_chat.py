@@ -50,8 +50,7 @@ class Server(threading.Thread):
         self.my_socket.listen(1)
         while True:
             self.connection, self.client_address = self.my_socket.accept()
-            logging.warning("connection from {}" . format(self.client_address))
-
+            logging.warning("connection from {}".format(self.client_address))
             clt = ProcessTheClient(self.connection, self.client_address)
             clt.start()
             self.the_clients.append(clt)
@@ -63,10 +62,10 @@ def main():
         portnumber = int(sys.argv[1])
     except:
         pass
+
     svr = Server(portnumber)
     svr.start()
 
 
 if __name__ == "__main__":
     main()
-

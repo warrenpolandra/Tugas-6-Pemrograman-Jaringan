@@ -1,7 +1,7 @@
 import socket
 import os
-import json
 import sys
+import json
 
 TARGET_IP = "127.0.0.1"
 
@@ -17,44 +17,44 @@ class ChatClient:
         j = cmdline.split(" ")
         try:
             command = j[0].strip()
-            if command == 'auth':
+            if (command == 'auth'):
                 username = j[1].strip()
                 password = j[2].strip()
                 return self.login(username, password)
-            elif command == 'send':
+            elif (command == 'send'):
                 usernameto = j[1].strip()
                 message = ""
                 for w in j[2:]:
                     message = "{} {}" . format(message, w)
                 return self.sendmessage(usernameto, message)
-            elif command == 'sendgroup':
+            elif (command == 'sendgroup'):
                 group_usernames = j[1].strip()
                 message = ""
                 for w in j[2:]:
                     message = "{} {}" . format(message, w)
                 return self.sendgroupmessage(group_usernames, message)
-            elif command == 'inbox':
+            elif (command == 'inbox'):
                 return self.inbox()
-            elif command == 'addrealm':
+            elif (command == 'addrealm'):
                 realm_id = j[1].strip()
                 target_realm_address = j[2].strip()
                 target_realm_port = j[3].strip()
                 return self.add_realm(realm_id, target_realm_address, target_realm_port)
-            elif command == 'sendrealm':
+            elif (command == 'sendrealm'):
                 realm_id = j[1].strip()
                 username_to = j[2].strip()
                 message = ""
                 for w in j[3:]:
                     message = "{} {}".format(message, w)
                 return self.send_realm_message(realm_id, username_to, message)
-            elif command == 'sendgrouprealm':
+            elif (command == 'sendgrouprealm'):
                 realm_id = j[1].strip()
                 group_usernames = j[2].strip()
                 message = ""
                 for w in j[3:]:
                     message = "{} {}" . format(message, w)
                 return self.send_group_realm_message(realm_id, group_usernames, message)
-            elif command == 'getrealminbox':
+            elif (command == 'getrealminbox'):
                 realm_id = j[1].strip()
                 return self.get_realm_inbox(realm_id)
             else:
@@ -69,7 +69,7 @@ class ChatClient:
             while True:
                 data = self.sock.recv(64)
                 print("diterima dari server", data)
-                if data:
+                if (data):
                     # data harus didecode agar dapat di operasikan dalam bentuk string
                     receivemsg = "{}{}" . format(receivemsg, data.decode())
                     if receivemsg[-4:] == '\r\n\r\n':
@@ -89,7 +89,7 @@ class ChatClient:
             return "Error, {}" . format(result['message'])
 
     def sendmessage(self, usernameto="xxx", message="xxx"):
-        if self.tokenid == "":
+        if (self.tokenid == ""):
             return "Error, not authorized"
         string = "send {} {} {} \r\n" . format(
             self.tokenid, usernameto, message)
@@ -101,7 +101,7 @@ class ChatClient:
             return "Error, {}" . format(result['message'])
 
     def inbox(self):
-        if self.tokenid == "":
+        if (self.tokenid == ""):
             return "Error, not authorized"
         string = "inbox {} \r\n" . format(self.tokenid)
         result = self.sendstring(string)
@@ -111,7 +111,7 @@ class ChatClient:
             return "Error, {}" . format(result['message'])
 
     def sendgroupmessage(self, group_usernames="xxx,yyy", message="xxx"):
-        if self.tokenid == "":
+        if (self.tokenid == ""):
             return "Error, not authorized"
         string = "sendgroup {} {} {} \r\n" . format(
             self.tokenid, group_usernames, message)
@@ -123,7 +123,7 @@ class ChatClient:
             return "Error, {}" . format(result['message'])
 
     def add_realm(self, realm_id, target_realm_address, target_realm_port):
-        if self.tokenid == "":
+        if (self.tokenid == ""):
             return "Error, not authorized"
         string = "addrealm {} {} {} \r\n" . format(
             realm_id, target_realm_address, target_realm_port)
@@ -134,7 +134,7 @@ class ChatClient:
             return "Error, {}" . format(result['message'])
 
     def send_realm_message(self, realm_id, username_to, message):
-        if self.tokenid == "":
+        if (self.tokenid == ""):
             return "Error, not authorized"
         string = "sendrealm {} {} {} \r\n" . format(
             self.tokenid, realm_id, username_to, message)
@@ -157,7 +157,7 @@ class ChatClient:
             return "Error {}".format(result['message'])
 
     def get_realm_inbox(self, realm_id):
-        if self.tokenid == "":
+        if (self.tokenid == ""):
             return "Error, not authorized"
         string = "getrealminbox {} {} \r\n" . format(self.tokenid, realm_id)
         print("Sending: " + string)
