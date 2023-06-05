@@ -170,14 +170,13 @@ class Chat:
         if username_from + '@' + server_from not in self.groups[group_id]:
             return {'status': 'ERROR', 'message': 'User Tidak Ada dalam {}' .format(group_id)}
         sent_id = []
-        sender = username_from + "@" + server_from
 
         for member in self.groups[group_id]:
             address = member.split("@")
             username_to = address[0].strip()
             server_to = address[1].strip()
             s_to = self.get_user(username_to)
-            if s_to is False or server_to not in self.servers or member is sender:
+            if s_to is False or server_to not in self.servers or s_to is s_fr:
                 continue
             if server_to == server_from:
                 self.send_message(sessionid, username_from, username_to, message)
