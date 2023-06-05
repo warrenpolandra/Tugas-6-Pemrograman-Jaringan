@@ -25,7 +25,7 @@ class RealmCommunicationThread(threading.Thread):
             while not self.queue.empty():
                 msg = self.queue.get()
                 logging.warning("MESSAGEQUEUE: {}".format(msg))
-                self.sock.sendall("auth".encode())
+                self.sock.sendall("auth \r\n".encode())
 
             # Menerima data dari realm lain
             data = self.sock.recv(1024)
