@@ -98,7 +98,7 @@ class Chat:
                 return {'status': 'OK'}
             elif command == 'sendrealm':
                 sessionid = j[1].strip()
-                realm_id = j[2].strip()
+                server_id = j[2].strip()
                 usernameto = j[3].strip()
                 message = ""
                 for w in j[4:]:
@@ -108,8 +108,8 @@ class Chat:
                                                                                                           sessionid][
                                                                                                           'username'],
                                                                                                       usernameto,
-                                                                                                      realm_id))
-                return self.send_realm_message(sessionid, realm_id, usernameto, message)
+                                                                                                      server_id))
+                return self.send_realm_message(sessionid, server_id, usernameto, message)
             elif command == 'sendgrouprealm':
                 sessionid = j[1].strip()
                 realm_id = j[2].strip()

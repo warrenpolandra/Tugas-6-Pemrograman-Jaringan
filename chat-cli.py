@@ -122,7 +122,7 @@ class ChatClient:
     def send_message_to_server(self, serverid, usernameto, message):
         if self.tokenid == "":
             return "Error, not authorized"
-        string = "sendrealm {} {} {} {}".format(self.tokenid, serverid, usernameto, message)
+        string = "sendrealm {} {} {} {}\r\n".format(self.tokenid, serverid, usernameto, message)
         result = self.sendstring(string)
         if result['status'] == 'OK':
             return "Message sent to server {}".format(serverid)
